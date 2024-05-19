@@ -21,7 +21,7 @@ productsRouter.get("/products/single/:id", async (req, res, next) => {
     });
     return product
       ? res.send(product)
-      : res.status(404).send({ error: "Product not found." });
+      : res.status(404).send({ error: "Product does not exist." });
   } catch (error) {
     next(error);
   }
@@ -47,7 +47,7 @@ productsRouter.get("/products/single/ratings/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
     const ratings = await prisma.rating.findMany({
-      where: { r_p_id: Number(id) },
+      where: { r_p_id: Number(id), AND: { r_deleted: false } },
       include: { users: { select: { u_username: true } } },
     });
     //include average rating for product in response
