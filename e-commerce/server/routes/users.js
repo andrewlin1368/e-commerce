@@ -12,7 +12,7 @@ usersRouter.post("/users/login", async (req, res, next) => {
     //validate fields
     if (!username || !password)
       return res
-        .status(400)
+        .status(401)
         .send({ error: "Username or password is not correct." });
     //validate username
     const user = await prisma.users.findFirst({
@@ -21,7 +21,7 @@ usersRouter.post("/users/login", async (req, res, next) => {
     //validate password
     if (!user || !bcrypt.compareSync(password, user.u_password))
       return res
-        .status(400)
+        .status(401)
         .send({ error: "Username or password is not correct." });
     //validate user account status
     if (user.u_deleted)
@@ -101,7 +101,7 @@ usersRouter.put("/users/update", loggedIn, async (req, res, next) => {
     const { firstname, lastname, password } = req.body;
     //validate if user is logged in
     if (!req.user)
-      return res.status(400).send({ error: "You must be logged in." });
+      return res.status(401).send({ error: "You must be logged in." });
     //extract user id from req
     const { u_id } = req.user;
     const data = {};
@@ -147,7 +147,7 @@ usersRouter.put("/users/closeaccount", loggedIn, async (req, res, next) => {
   try {
     //validate user is logged in
     if (!req.user)
-      return res.status(400).send({ error: "You must be logged in." });
+      return res.status(401).send({ error: "You must be logged in." });
     const { u_id } = req.user;
     await prisma.users.update({
       where: { u_id },
