@@ -3,6 +3,7 @@ const { loggedIn } = require("../middleware/validate");
 const { prisma } = require("../../db/client");
 const ratingsRouter = express.Router();
 
+//requires users to be logged in
 ratingsRouter.use(loggedIn, (req, res, next) => {
   if (!req.user)
     return res.status(401).send({ error: "You must be logged in." });
@@ -99,32 +100,29 @@ ratingsRouter.put("/ratings/update/rating/:id", async (req, res, next) => {
 });
 
 //delete: remove rating
-ratingsRouter.delete(
-  "/ratings/delete/rating/:id",
-  async (req, res, next) => {
-    try {
-      const { u_id } = req.user;
-      const { id } = req.params;
-      //validate rating exist and user is creator and not deleted
-      let rating = await prisma.rating.findFirst({
-        where: {
-          r_id: Number(id),
-          AND: { r_u_id: u_id, AND: { r_deleted: false } },
-        },
+ratingsRouter.delete("/ratings/delete/rating/:id", async (req, res, next) => {
+  try {
+    const { u_id } = req.user;
+    const { id } = req.params;
+    //validate rating exist and user is creator and not deleted
+    let rating = await prisma.rating.findFirst({
+      where: {
+        r_id: Number(id),
+        AND: { r_u_id: u_id, AND: { r_deleted: false } },
+      },
+    });
+    if (!rating)
+      return res.status(400).send({
+        error: "Something went wrong.",
       });
-      if (!rating)
-        return res.status(400).send({
-          error: "Something went wrong.",
-        });
-      rating = await prisma.rating.update({
-        where: { r_id: Number(id) },
-        data: { r_deleted: true },
-      });
-      return res.send(rating);
-    } catch (error) {
-      next(error);
-    }
+    rating = await prisma.rating.update({
+      where: { r_id: Number(id) },
+      data: { r_deleted: true },
+    });
+    return res.send(rating);
+  } catch (error) {
+    next(error);
   }
-);
+});
 
 module.exports = ratingsRouter;
