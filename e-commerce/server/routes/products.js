@@ -1,6 +1,7 @@
 const express = require("express");
 const productsRouter = express.Router();
 const { prisma } = require("../../db/client.js");
+const { loggedIn } = require("../middleware/validate.js");
 
 //get: all products
 productsRouter.get("/products/all", async (req, res, next) => {
@@ -59,5 +60,46 @@ productsRouter.get("/products/single/ratings/:id", async (req, res, next) => {
     next(error);
   }
 });
+
+//post: user can add item to cart
+productsRouter.post(
+  "/produts/addcart/item/:id",
+  loggedIn,
+  async (req, res, next) => {
+    try {
+      if (!req.user)
+        return res.status(400).send({ error: "You must be logged in." });
+      const { id } = req.params;
+      const { u_id } = req.user;
+      //check if item exist
+      const product = await prisma.products.findFirst({
+        where: { p_id: Number(id) },
+      });
+      if (!product)
+        return res.status(400).send({ error: "Item does not exist." });
+      //check if user has a cart
+      let cart = await prisma.cart.findFirst({ where: { c_u_id: u_id } });
+      //if not create a cart
+      if (!cart) cart = await prisma.cart.create({ data: { c_u_id: u_id } });
+      //if item exist in cart increase item count
+      let item = await prisma.cart_items.findFirst({
+        where: { ci_c_id: cart.c_id, AND: { ci_p_id: Number(id) } },
+      });
+      if (item)
+        item = await prisma.cart_items.update({
+          where: { ci_id: item.ci_id, AND: { ci_p_id: Number(id) } },
+          data: { ci_count: item.ci_count + 1 },
+        });
+      //else add item to cart
+      else
+        item = await prisma.cart_items.create({
+          data: { ci_c_id: cart.c_id, ci_p_id: Number(id), ci_count: 1 },
+        });
+      return res.send({ cart, item });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 module.exports = productsRouter;
