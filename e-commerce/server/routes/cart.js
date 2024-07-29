@@ -219,4 +219,20 @@ cartRouter.post("/cart/checkout/:id", async (req, res, next) => {
   }
 });
 
+//post: add guest cart into user cart
+cartRouter.post("/cart/addCart/guest", async (req, res, next) => {
+  try {
+    const { u_id } = req.user;
+    const { data } = req.body;
+    //check if user has cart
+    //create cart if they do not
+
+    //if no cart, add items to cart
+
+    //if cart exist
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = cartRouter;

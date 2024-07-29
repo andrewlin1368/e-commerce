@@ -17,6 +17,7 @@ ratingsRouter.get("/ratings/all", async (req, res, next) => {
     //ignore deleted ratings
     const ratings = await prisma.rating.findMany({
       where: { r_u_id: u_id, AND: { r_deleted: false } },
+      include: { products: { select: { p_name: true } } },
     });
     return res.send(ratings);
   } catch (error) {
@@ -58,6 +59,7 @@ ratingsRouter.post("/ratings/new/product/:id", async (req, res, next) => {
         r_u_id: u_id,
         r_rating: Number(rating_score),
       },
+      include: { users: { select: { u_username: true } } },
     });
     return res.send(rating);
   } catch (error) {
@@ -92,6 +94,7 @@ ratingsRouter.put("/ratings/update/rating/:id", async (req, res, next) => {
     rating = await prisma.rating.update({
       where: { r_id: Number(id) },
       data: { r_rating: Number(rating_score) },
+      include: { users: { select: { u_username: true } } },
     });
     return res.send(rating);
   } catch (error) {

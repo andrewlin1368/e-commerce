@@ -33,7 +33,7 @@ reviewsRouter.post("/reviews/new/product/:id", async (req, res, next) => {
     const { u_id } = req.user;
     const { review } = req.body;
     //validate review
-    if (review?.length < 1)
+    if (!review || review?.length < 1)
       return res.status(400).send({ error: "Reviews cannot be empty." });
     //validate product
     const product = await prisma.products.findFirst({
@@ -43,6 +43,7 @@ reviewsRouter.post("/reviews/new/product/:id", async (req, res, next) => {
       return res.status(400).send({ error: "Product does not exist." });
     const _review = await prisma.reviews.create({
       data: { r_p_id: Number(id), r_u_id: u_id, r_review: review },
+      include: { users: { select: { u_username: true } } },
     });
     return res.send(_review);
   } catch (error) {
@@ -66,11 +67,12 @@ reviewsRouter.put("/reviews/update/review/:id", async (req, res, next) => {
     if (!review)
       return res.status(400).send({ error: "Something went wrong." });
     //validate new review
-    if (new_review?.length < 1)
+    if (!new_review || new_review?.length < 1)
       return res.status(400).send({ error: "Reviews cannot be empty." });
     review = await prisma.reviews.update({
       where: { r_id: Number(id) },
       data: { r_review: new_review, r_edited: true },
+      include: { users: { select: { u_username: true } } },
     });
     return res.send(review);
   } catch (error) {
